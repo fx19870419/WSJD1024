@@ -5,6 +5,7 @@ import os
 import shutil
 from selenium import webdriver
 from selenium.webdriver.support.select import Select
+import sys
 
 
 #获取yyyymm
@@ -28,6 +29,7 @@ info_sht = info_xlsx['Sheet1']
 PROSAS_path = info_sht.cell(1,4).value
 path_read = info_sht.cell(2,4).value
 path_schedul = info_sht.cell(3,4).value
+path_sum = info_sht.cell(4,4).value
 dir_read = os.path.join(path_read,yyyymm)
 dir_save = os.path.join(path_read,yyyymm,'已填报')
 while os.path.exists(dir_save) == False:
@@ -35,7 +37,7 @@ while os.path.exists(dir_save) == False:
 username = info_sht['B1'].value
 password = info_sht['B2'].value
 shop_name_id = {}
-for i in range(4,info_sht.max_row):
+for i in range(4,info_sht.max_row+1):
   shop_name_id[info_sht.cell(i,1).value] = info_sht.cell(i,2).value
 info_xlsx.save('信息表格.xlsx')
 
@@ -47,6 +49,7 @@ schedul_sht = schedul_xlsx['卫生监督进度表']
 
 #读取月份文件夹下的所有文件
 files_xlsx = []
+files_save = []
 for root,dirs,files in os.walk(dir_read):
     for file in files:
         files_xlsx.append(os.path.join(root,file))
@@ -83,7 +86,8 @@ else:
     if tian_or_not == 'n':
         print('即将进行卫生监督统计，但部分监督记录尚未填报，该记录将不会纳入统计，请注意！')
     elif tian_or_not != 'n' and tian_or_not != 'y':
-        print('您的输入有误，程序进入疯魔状态，不为此后发生的任何事负责！')
+        print('您的输入有误，程序终止，请重新启动程序并正确输入！')
+        sys.exit()
     elif tian_or_not == 'y':
         '''#开浏览器、打开网页
         browser = webdriver.Firefox()
@@ -152,9 +156,9 @@ else:
                 typ_list=['※','※','※','5','10','5','5','2','※','5','10','3','5','3','※','2','10','※','10','10','5','5','※','5','5','5','2','3','3']
 
             #将一次卫生监督结果存入list_score变量，然后将变量写入浏览器表单
-            for r in range(2,sheet.max_row):
+            for r in range(2,sheet.max_row+1):
                 list_score=[]
-                for c in range(1,sheet.max_column):
+                for c in range(1,sheet.max_column+1):
                     list_score.append(sheet.cell(r,c).value)
                 for i in range(len(list_score)):
                     if list_score[i] == '不符合' and list_score[i+1] == None:
@@ -552,16 +556,16 @@ else:
                 shop_row = 3
                 while schedul_sht.cell(shop_row,1).value != list_score[1]:
                     shop_row += 1
-                schedul_sht.cell(shop_row,(int(mm_2019)*3)).value = '√'
+                schedul_sht.cell(shop_row,(mm_2019 * 3)).value = '√'
                 if schedul_sht.cell(shop_row,2).value == 'A级':
                     for i in range(1,6):
-                        schedul_sht.cell(shop_row,(int(mm_2019+i)*3)).value = '-'
+                        schedul_sht.cell(shop_row,((mm_2019 + i) * 3)).value = '-'
                 elif schedul_sht.cell(shop_row,2).value == 'B级':
                     for i in range(1,3):
-                        schedul_sht.cell(shop_row,(int(mm_2019+i)*3)).value = '-'
+                        schedul_sht.cell(shop_row,((mm_2019 + i) * 3)).value = '-'
                 elif schedul_sht.cell(shop_row,2).value == '未定级':
                     for i in range(1,2):
-                        schedul_sht.cell(shop_row,(int(mm_2019+i)*3)).value = '-'
+                        schedul_sht.cell(shop_row,((mm_2019 + i) * 3)).value = '-'
                 schedul_xlsx.save(path_schedul)
 
             #把该文件放入下一层文件夹中
@@ -570,6 +574,119 @@ else:
             print('======================================================')
 
 
-#显示统计结果和监督提示，如果为空，先根据等级向前找√记录，再填-，如果还是空，则提示
-for mm_row in range(3,schedul_sht.max_row):
+#遍历进度表，如果有单位监督记录为空，先根据等级向前找√记录，再填-，如果还是空，则提示
+for mm_row in range(3,schedul_sht.max_row+1):
+    mm_col = mm_2019
+    while (schedul_sht.cell(mm_row,(mm_col * 3)).value == None) or (schedul_sht.cell(mm_row,(mm_col * 3)).value == '-'):
+        mm_col -= 1
+        if mm_col == 0:
+            print(path_schedul + '中未发现' + schedul_sht.cell(mm_row,1).value + '的卫生监督记录，请填写至少一次，否则无法纳入统计！')
+            mm_row += 1
+            break
+    if schedul_sht.cell(mm_row,2).value == 'A级':
+        for i in range(1,6):
+            schedul_sht.cell(mm_row,((mm_col + i) * 3)).value = '-'
+    elif schedul_sht.cell(mm_row,2).value == 'B级':
+        for i in range(1,3):
+            schedul_sht.cell(mm_row,((mm_col + i) * 3)).value = '-'
+    elif schedul_sht.cell(mm_row,2).value == '未定级':
+        for i in range(1,2):
+            schedul_sht.cell(mm_row,((mm_col + i) * 3)).value = '-'
+schedul_xlsx.save(path_schedul)
+print('======================================================')
+
+
+#读取进度表，显示提示
+shop_todo = []
+shop_nottodo = []
+shop_finish = []
+for mm_row in range(3,schedul_sht.max_row + 1):
+    if schedul_sht.cell(mm_row,mm_2019).value == '√' :
+        shop_finish.append(schedul_sht.cell(mm_row,1).value)
+    if schedul_sht.cell(mm_row,mm_2019).value == '-' :
+        shop_nottodo.append(schedul_sht.cell(mm_row,1).value)
+    if schedul_sht.cell(mm_row,mm_2019).value == '' :
+        shop_todo.append(schedul_sht.cell(mm_row,1).value)
+print(yyyy + '年' + mm + '月' + '卫生监督情况如下：')
+print('不必监管：')
+for i in shop_nottodo:
+    print(i)
+print('===================')
+print('本月已完成：')
+for i in shop_finish:
+  print(i)
+print('===================')
+print('本月需监管：')
+for i in shop_todo:
+  print(i)
+print('======================================================')
+
+
+#编写总结
+for root,dirs,files in os.walk(dir_save):
+    for file in files:
+        files_save.append(os.path.join(root,file))
+
+shop_name = []
+shop_coun = 0
+wenti_coun = 0
+employee_coun = 0
+for file in files_save:
+    wb_save = openpyxl.load_workbook(file)
+    wb_save_sht = wb_save['Sheet1']
+    for c in range(1,wb_save_sht.max_column + 1):
+        if wb_save_sht.cell(1,c).value == '员工数':
+            yg_c = c
+    for r in range(2,wb_save_sht.max_row + 1):
+        if wb_save_sht.cell(r,2).value in shop_name:
+            print('监测到重复的单位名称，统计结果可能不准确，请确认！')
+            print('重复单位名称为：' + wb_save_sht.cell(r,2).value)
+        shop_name.append(wb_save_sht.cell(r,2).value)
+        shop_coun += 1
+        employee_coun += wb_save_sht.cell(r,yg_c).value
+        for c in range (1,wb_save_sht.max_column + 1):
+            if wb_save_sht.cell(r,c).value == '不符合':
+                wenti_coun += 1
+    wb_save.save(file)
+
+
+shop_coun = str(shop_coun)
+wenti_coun = str(wenti_coun)
+employee_coun = str(employee_coun)
+txt = '本月总结：\n\
+企业共X家，\n\
+开展卫生监督'+ shop_coun + '次，\n\
+监管' + employee_coun + '人，\n\
+快速检测X次X个项目，\n\
+发现阳性问题' + wenti_coun +'个。\n\
+采样送检X批次。\n\n\
+开展开展鼠类夹夜法、鼠笼法及蚤类、寄生蜱、螨类监测一次、\n\
+蚊类二氧化碳诱蚊灯监测两次、\n\
+蚊类诱卵器监测一次、\n\
+蠓类紫外灯监测一次，\n\
+捕获均为0。\n\n\
+对西宁机场T1、T2航站楼及贵宾厅开展公共场所空气质量监测，\n\
+共对X个点位进行X项监测，\n\
+发现不合格X项\n\n\n'
+txt_write = open(os.path.join(path_sum,(yyyymm + '汇总.txt')),'a',encoding = 'utf-8')
+txt_write.write(txt)
+txt_write.close()
+print(txt)
+print('已生成文件' + os.path.join(path_sum,(yyyymm + '汇总.txt')))
+input('按回车键退出')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
     
