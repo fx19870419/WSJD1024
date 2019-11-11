@@ -50,9 +50,13 @@ schedul_sht = schedul_xlsx['卫生监督进度表']
 #读取月份文件夹下的所有文件
 files_xlsx = []
 files_save = []
-for root,dirs,files in os.walk(dir_read):
+for root,dirs,files in os.walk(dir_read,topdown = False):
     for file in files:
         files_xlsx.append(os.path.join(root,file))
+while ('已填报' in files_xlsx[0]) == True:
+    del files_xlsx[0]
+    if files_xlsx == []:
+        break
 
 
 #判断符合或者不符合的函数，x是项的序号，y是符合或者不符合或者合理缺项:
@@ -89,7 +93,7 @@ else:
         print('您的输入有误，程序终止，请重新启动程序并正确输入！')
         sys.exit()
     elif tian_or_not == 'y':
-        '''#开浏览器、打开网页
+        #开浏览器、打开网页
         browser = webdriver.Firefox()
         browser.maximize_window()
         browser.get(PROSAS_path)
@@ -117,7 +121,7 @@ else:
         el_rcwsjd.click()#点击日常卫生监督按钮
         el_jdpf=browser.find_element_by_partial_link_text('监督评分')
         el_jdpf.click()#点击监督评分按钮
-'''
+
         for file_name in files_xlsx:
             #加载文件
             wb=openpyxl.load_workbook(file_name)
@@ -163,13 +167,13 @@ else:
                 for i in range(len(list_score)):
                     if list_score[i] == '不符合' and list_score[i+1] == None:
                         list_score[i+1]=' '
-                '''time.sleep(8)
+                time.sleep(8)
                 browser.switch_to.default_content()
                 el_frame=browser.find_element_by_class_name('iframeClass')
                 browser.switch_to.frame(el_frame)
                 el_No=browser.find_element_by_name('cardNo')
                 el_No.clear()
-                el_No.send_keys(shopNN[list_score[1]])
+                el_No.send_keys(shop_name_id[list_score[1]])
                 el_startDate=browser.find_element_by_name('startDate')
                 sDate=datetime.datetime.now()-datetime.timedelta(days=365)#起始日期（当前时间往前推365天）
                 browser.execute_script('arguments[0].removeAttribute(\"readonly\")',el_startDate)
@@ -549,7 +553,7 @@ else:
                 el_save=browser.find_element_by_xpath("//button[contains(text(),'保存')]")
                 el_save.click()
                 el_sumbit_2=browser.find_element_by_xpath("//a[contains(text(),'确定')]")
-                el_sumbit_2.click()'''
+                el_sumbit_2.click()
                 print(list_score[1].ljust(20,'…') + '已完成录入')
 
                 #录完一家做记录并向后填写‘-’
@@ -601,11 +605,11 @@ shop_todo = []
 shop_nottodo = []
 shop_finish = []
 for mm_row in range(3,schedul_sht.max_row + 1):
-    if schedul_sht.cell(mm_row,mm_2019).value == '√' :
+    if schedul_sht.cell(mm_row,(mm_2019 * 3)).value == '√':
         shop_finish.append(schedul_sht.cell(mm_row,1).value)
-    if schedul_sht.cell(mm_row,mm_2019).value == '-' :
+    elif schedul_sht.cell(mm_row,(mm_2019 * 3)).value == '-':
         shop_nottodo.append(schedul_sht.cell(mm_row,1).value)
-    if schedul_sht.cell(mm_row,mm_2019).value == '' :
+    elif schedul_sht.cell(mm_row,(mm_2019 * 3)).value == None:
         shop_todo.append(schedul_sht.cell(mm_row,1).value)
 print(yyyy + '年' + mm + '月' + '卫生监督情况如下：')
 print('不必监管：')
