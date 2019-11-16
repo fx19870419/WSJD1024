@@ -10,8 +10,8 @@ import openpyxl
 
 #获取yyyymm和now
 today = datetime.date.today()
-yyyy_now = str(today.year)
-mm_now = str(today.month)
+yyyy_now = today.year
+mm_now = today.month
 yyyymm = input('请输入数据年月（格式yyyy-mm），当月请直接按回车键：')
 if yyyymm == '':
     yyyy = str(today.year)
@@ -47,6 +47,7 @@ info_xlsx.save('信息表格.xlsx')
 #打开进度表、读取sht
 schedul_xlsx = openpyxl.load_workbook(path_schedul,data_only = True)
 schedul_sht = schedul_xlsx['卫生监督进度表']
+score_sht = schedul_xlsx['评分记录']
 
 
 #读取月份文件夹下的所有文件
@@ -83,6 +84,19 @@ def result(score,i):
         browser.execute_script("arguments[0].click();",el_score)
         el_explain=browser.find_element_by_css_selector(input_score)
         el_explain.send_keys(list_score[i+1])
+
+
+#用于计算两个年月之间差距几个月的函数
+def tm_differ(y_now,m_now,before):
+    yyyy_b = int(before[0,4])
+    mm_b = int(before[5,7])
+    if mm_b == mm_now:
+        return (yyyy_now - yyyy_b) * 12
+    elif mm_b < mm_now:
+        return ((yyyy_now - yyyy_b) * 12 + (mm_now - mm_b))
+    elif mm_b > mm_now:
+        return ((yyyy_now - yyyy_b - 1) * 12 + (mm_now - mm_b + 12))
+
 
 
 if files_xlsx == []:
@@ -553,7 +567,10 @@ else:
                   el_supdate.send_keys(list_score[81])
                 el_pfjgclick=browser.find_element_by_xpath("//label[contains(text(),'评分结果')]")
                 el_pfjgclick.click()
-#记录评分结果并将近12个月的平均分算好
+#记录评分结果
+score_end = int(读取到的分数)
+score_name = [读取到的分数,list_score[1]]
+#评分的月份使用mm_2019
                 el_save=browser.find_element_by_xpath("//button[contains(text(),'保存')]")
                 el_save.click()
                 el_sumbit_2=browser.find_element_by_xpath("//a[contains(text(),'确定')]")
@@ -684,6 +701,15 @@ print('已生成文件' + os.path.join(path_sum,(yyyymm + '汇总.txt')))
 
 
 #计算当月是否有需要调整评级的单位并给出建议
+for row in range(3,schedul_sht.max_row):
+    if schedul_sht.cell(row,1).value == '水站':
+        break
+    if tm_differ(yyyy_now,mm_now,schedul_sht.cell(row,3).value) >= 11:
+        print(schedul_sht.cell(row,1).value + '上次评级时间为' + schedul_sht.cell(row,3).value + '，等级为' + schedul_sht.cell(row,2).value)
+        print('距今已有一年时间，请根据监督记录进行评级：')
+        print(schedul_sht.cell(row,1).value + '卫生许可评分为：' + str(score_sht.cell(row,2).value))
+        
+        
 
 
 input('按回车键退出')
