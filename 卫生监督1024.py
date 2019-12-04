@@ -1,11 +1,11 @@
 import datetime
-import openpyxl
 import time
 import os
 import shutil
 from selenium import webdriver
 from selenium.webdriver.support.select import Select
 import sys
+import openpyxl
 
 
 #获取yyyymm
@@ -53,10 +53,9 @@ files_save = []
 for root,dirs,files in os.walk(dir_read,topdown = False):
     for file in files:
         files_xlsx.append(os.path.join(root,file))
-while ('已填报' in files_xlsx[0]) == True:
-    del files_xlsx[0]
-    if files_xlsx == []:
-        break
+if files_xlsx != []:
+    while ('已填报' in files_xlsx[0]) == True:
+        del files_xlsx[0]
 
 
 #判断符合或者不符合的函数，x是项的序号，y是符合或者不符合或者合理缺项:
