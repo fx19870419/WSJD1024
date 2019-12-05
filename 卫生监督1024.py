@@ -7,6 +7,10 @@ from selenium.webdriver.support.select import Select
 import sys
 import openpyxl
 
+#系统环境变量中增加‘C:\\python’
+env_path = os.getenv('path') + ';C:\\python'
+os.environ['Path'] = env_path
+
 
 #获取yyyymm
 yyyymm = input('请输入数据年月（格式yyyy-mm），当月请直接按回车键：')
@@ -56,6 +60,8 @@ for root,dirs,files in os.walk(dir_read,topdown = False):
 if files_xlsx != []:
     while ('已填报' in files_xlsx[0]) == True:
         del files_xlsx[0]
+        if files_xlsx == []:
+            break
 
 
 #判断符合或者不符合的函数，x是项的序号，y是符合或者不符合或者合理缺项:
