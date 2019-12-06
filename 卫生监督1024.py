@@ -6,6 +6,17 @@ from selenium import webdriver
 from selenium.webdriver.support.select import Select
 import sys
 import openpyxl
+import pyperclip
+
+
+#系统环境变量中增加‘C:\\python’
+env_path = os.getenv('path') + ';C:\\python'
+os.environ['Path'] = env_path
+
+
+#感谢
+print('感谢江门关卫检处刘卫东技术指导')
+print('感谢沈阳机场关孙玉龙参与测试')
 
 
 #获取yyyymm和now
@@ -56,10 +67,11 @@ files_save = []
 for root,dirs,files in os.walk(dir_read,topdown = False):
     for file in files:
         files_xlsx.append(os.path.join(root,file))
-while ('已填报' in files_xlsx[0]) == True:
-    del files_xlsx[0]
-    if files_xlsx == []:
-        break
+if files_xlsx != []:
+    while ('已填报' in files_xlsx[0]) == True:
+        del files_xlsx[0]
+        if files_xlsx == []:
+            break
 
 
 #判断符合或者不符合的函数，x是项的序号，y是符合或者不符合或者合理缺项:
@@ -86,10 +98,10 @@ def result(score,i):
         el_explain.send_keys(list_score[i+1])
 
 
-#用于计算两个年月之间差距几个月的函数
-def tm_differ(y_now,m_now,before):
-    yyyy_b = int(before[0,4])
-    mm_b = int(before[5,7])
+#用于计算某年某月与本月差距几个月的函数
+def tm_differ(before):
+    yyyy_b = int(before.year)
+    mm_b = int(before.month)
     if mm_b == mm_now:
         return (yyyy_now - yyyy_b) * 12
     elif mm_b < mm_now:
@@ -702,14 +714,30 @@ print('已生成文件' + os.path.join(path_sum,(yyyymm + '汇总.txt')))
 
 #计算当月是否有需要调整评级的单位并给出建议
 for row in range(3,schedul_sht.max_row):
+    score_12 = []
     if schedul_sht.cell(row,1).value == '水站':
         break
-    if tm_differ(yyyy_now,mm_now,schedul_sht.cell(row,3).value) >= 11:
-        print(schedul_sht.cell(row,1).value + '上次评级时间为' + schedul_sht.cell(row,3).value + '，等级为' + schedul_sht.cell(row,2).value)
-        print('距今已有一年时间，请根据监督记录进行评级：')
+    if tm_differ(schedul_sht.cell(row,3).value) >= 11:
+        print(schedul_sht.cell(row,1).value + '-' + schedul_sht.cell(row,2).value + '，上次评级时间为' + str(schedul_sht.cell(row,3).value.year) + '年' + str(schedul_sht.cell(row,3).value.month) + '月，请根据监督记录进行评级：')
         print(schedul_sht.cell(row,1).value + '卫生许可评分为：' + str(score_sht.cell(row,2).value))
-        
+        #往前数12个数，算平均分，print出来。
+        for i in range(0,12):
+            score_12.append(score_sht.cell(row,((yyyy_now - 2019) * 12 + mm_now + 2 - i)).value)
+        while None in score_12:
+            score_12.remove(None)
+        tot_scor = 0
+        for scor in score_12:
+            tot_scor = tot_scor + scor
+        RCscor = tot_scor/(len(score_12))
+        print(schedul_sht.cell(row,1).value + '日常监督评分为：' + str(RCscor))
+        #加判定，给出建议等级        
+        print('========================================================================')
         
 
-
+shop_todo_txt = ''
+if shop_todo != []:
+    for i in shop_todo:
+        shop_todo_txt = shop_todo_txt + i +'，'
+pyperclip.copy(shop_todo_txt)
+print('已将本月需监管企业名单复制到剪贴板')
 input('按回车键退出')
