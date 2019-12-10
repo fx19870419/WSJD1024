@@ -704,12 +704,13 @@ txt = '本月总结：\n\
 捕获均为0。\n\n\
 对西宁机场T1、T2航站楼及贵宾厅开展公共场所空气质量监测，\n\
 共对X个点位进行X项监测，\n\
-发现不合格X项\n\n\n'
+发现不合格X项\n'
 txt_write = open(os.path.join(path_sum,(yyyymm + '汇总.txt')),'a',encoding = 'utf-8')
 txt_write.write(txt)
 txt_write.close()
 print(txt)
 print('已生成文件' + os.path.join(path_sum,(yyyymm + '汇总.txt')))
+print('========================================================================')
 
 
 #计算当月是否有需要调整评级的单位并给出建议
@@ -719,7 +720,21 @@ for row in range(3,schedul_sht.max_row):
         break
     if tm_differ(schedul_sht.cell(row,3).value) >= 11:
         print(schedul_sht.cell(row,1).value + '-' + schedul_sht.cell(row,2).value + '，上次评级时间为' + str(schedul_sht.cell(row,3).value.year) + '年' + str(schedul_sht.cell(row,3).value.month) + '月，请根据监督记录进行评级：')
-        print(schedul_sht.cell(row,1).value + '卫生许可评分为：' + str(score_sht.cell(row,2).value))
+
+        #判断并规范许可评分为“良好”、“一般”、“差”
+        xk_scor = score_sht.cell(row,2).value
+        if isinstance(xk_scor,(float,int)):
+            if xk_scor >= 85:
+                xk_scor = '良好'
+            elif 60 <= xk_scor < 85:
+                xk_scor = '一般'
+            else:
+                xk_scor = '差'
+        elif (xk_scor != '良好') or (xk_scor != '一般') or (xk_scor != '差'):
+            print(schedul_sht.cell(row,1).value + '的卫生许可评分格式不正确，无法判定，请核实！')
+        print(schedul_sht.cell(row,1).value + '卫生许可评分为：' + xk_scor)
+
+        #计算并规范日常评分
         #往前数12个数，算平均分，print出来。
         for i in range(0,12):
             score_12.append(score_sht.cell(row,((yyyy_now - 2019) * 12 + mm_now + 2 - i)).value)
@@ -728,11 +743,32 @@ for row in range(3,schedul_sht.max_row):
         tot_scor = 0
         for scor in score_12:
             tot_scor = tot_scor + scor
-        RCscor = tot_scor/(len(score_12))
-        print(schedul_sht.cell(row,1).value + '日常监督评分为：' + str(RCscor))
-        #加判定，给出建议等级        
+        rc_scor = tot_scor/(len(score_12))
+        if rc_scor >= 85:
+            rc_scor = '良好'
+        elif 60 <= rc_scor < 85:
+            rc_scor = '一般'
+        else:
+            rc_scor = '差'
+        print(schedul_sht.cell(row,1).value + '日常监督评分为：' + rc_scor)
+
+        #加判定，给出建议等级
+        if (xk_scor == '良好' and rc_scor == '良好'):
+            print('建议评为A级企业')
+        elif (xk_scor == '良好' and rc_scor == '一般'):
+            print('建议评为B级企业')
+        elif (xk_scor == '良好' and rc_scor == '差'):
+            print('企业日常监督评分为差，建议评为D级企业，不予延续卫生许可')
+        elif (xk_scor == '一般' and rc_scor == '良好'):
+            print('建议评为B级企业')
+        elif (xk_scor == '一般' and rc_scor == '一般'):
+            print('建议评为C级企业')
+        elif (xk_scor == '一般' and rc_scor == '差'):
+            print('企业日常监督评分为差，建议评为D级企业，不予延续卫生许可')
+        elif xk_scor == '差':
+            print('企业卫生许可评分为差，建议评为D级企业，不予卫生许可')
         print('========================================================================')
-        
+
 
 shop_todo_txt = ''
 if shop_todo != []:
