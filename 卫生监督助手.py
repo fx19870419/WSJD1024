@@ -732,14 +732,14 @@ for row in range(3,schedul_sht.max_row):
         xk_scor = score_sht.cell(row,2).value
         if isinstance(xk_scor,(float,int)):
             if xk_scor >= 85:
-                xk_scor = '良好'
+                xk_dj = '良好'
             elif 60 <= xk_scor < 85:
-                xk_scor = '一般'
+                xk_dj = '一般'
             else:
-                xk_scor = '差'
-        elif (xk_scor != '良好') or (xk_scor != '一般') or (xk_scor != '差'):
+                xk_dj = '差'
+        elif (xk_dj != '良好') or (xk_dj != '一般') or (xk_dj != '差'):
             print(schedul_sht.cell(row,1).value + '的卫生许可评分格式不正确，无法判定，请核实！')
-        print(schedul_sht.cell(row,1).value + '卫生许可评分为：' + xk_scor)
+        print(schedul_sht.cell(row,1).value + '卫生许可评分为：' + xk_dj + '(' + "%.2f"%xk_scor + ')')
 
         #计算并规范日常评分
         #往前数12个数，算平均分，print出来。
@@ -752,27 +752,27 @@ for row in range(3,schedul_sht.max_row):
             tot_scor = tot_scor + scor
         rc_scor = tot_scor/(len(score_12))
         if rc_scor >= 85:
-            rc_scor = '良好'
+            rc_dj = '良好'
         elif 60 <= rc_scor < 85:
-            rc_scor = '一般'
+            rc_dj = '一般'
         else:
-            rc_scor = '差'
-        print(schedul_sht.cell(row,1).value + '日常监督评分为：' + rc_scor)
+            rc_dj = '差'
+        print(schedul_sht.cell(row,1).value + '日常监督评分为：' + rc_dj + '(' + "%.2f"%rc_scor + ')')
 
         #加判定，给出建议等级
-        if (xk_scor == '良好' and rc_scor == '良好'):
+        if (xk_dj == '良好' and rc_dj == '良好'):
             print('建议评为A级企业')
-        elif (xk_scor == '良好' and rc_scor == '一般'):
+        elif (xk_dj == '良好' and rc_dj == '一般'):
             print('建议评为B级企业')
-        elif (xk_scor == '良好' and rc_scor == '差'):
+        elif (xk_dj == '良好' and rc_dj == '差'):
             print('企业日常监督评分为差，建议评为D级企业，不予延续卫生许可')
-        elif (xk_scor == '一般' and rc_scor == '良好'):
+        elif (xk_dj == '一般' and rc_dj == '良好'):
             print('建议评为B级企业')
-        elif (xk_scor == '一般' and rc_scor == '一般'):
+        elif (xk_dj == '一般' and rc_dj == '一般'):
             print('建议评为C级企业')
-        elif (xk_scor == '一般' and rc_scor == '差'):
+        elif (xk_dj == '一般' and rc_dj == '差'):
             print('企业日常监督评分为差，建议评为D级企业，不予延续卫生许可')
-        elif xk_scor == '差':
+        elif xk_dj == '差':
             print('企业卫生许可评分为差，建议评为D级企业，不予卫生许可')
         print('========================================================================')
 
