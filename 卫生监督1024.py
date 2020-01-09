@@ -600,16 +600,16 @@ else:
                 shop_row = 3
                 while schedul_sht.cell(shop_row,1).value != list_score[1]:
                     shop_row += 1
-                schedul_sht.cell(shop_row,(mm_2019 * 3)).value = '√'
+                schedul_sht.cell(shop_row,(mm_2019 * 3 + 1)).value = '√'
                 if schedul_sht.cell(shop_row,2).value == 'A级':
                     for i in range(1,6):
-                        schedul_sht.cell(shop_row,((mm_2019 + i) * 3)).value = '-'
+                        schedul_sht.cell(shop_row,((mm_2019 + i) * 3 + 1)).value = '-'
                 elif schedul_sht.cell(shop_row,2).value == 'B级':
                     for i in range(1,3):
-                        schedul_sht.cell(shop_row,((mm_2019 + i) * 3)).value = '-'
+                        schedul_sht.cell(shop_row,((mm_2019 + i) * 3 + 1)).value = '-'
                 elif schedul_sht.cell(shop_row,2).value == '未定级':
                     for i in range(1,2):
-                        schedul_sht.cell(shop_row,((mm_2019 + i) * 3)).value = '-'
+                        schedul_sht.cell(shop_row,((mm_2019 + i) * 3 + 1)).value = '-'
                 schedul_xlsx.save(path_schedul)
 
             #把该文件放入下一层文件夹中
